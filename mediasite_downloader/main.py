@@ -6,14 +6,15 @@ This script downloads video and slides of a mediasite presentation, and puts the
 Requires requests python library, as well as mplayer tool.
 
 Created on Apr 9, 2013
-
+Last Update: 6 May 2013
 @author: abiusx
+@version: 1.1
 '''
 import requests,re,os,glob,sys
 if (__name__!="__main__"):
     exit();
 def file_put_contents(filename,data):
-    f = open(filename, 'w')
+    f = open(filename, 'w',"utf-8")
     f.write(data)
     f.close()
 def file_get_contents(filename):
@@ -37,6 +38,8 @@ data=response.text
 title=re.search("<title>(.*?)<\/title>",data,re.S).group(1).strip()
 fileTitle=title.replace(":","_").replace(" ","_").replace("__","_")
 print "Presentation title: <%s>"%title;
+
+
 manifestUrl=re.search("<script src=\"(.*?manifest.js.*?)\"",data).group(1)
 print ("Found manifest URL: "+manifestUrl);
 response=requests.get(manifestUrl);
@@ -84,18 +87,14 @@ if (r):
 for i in range (state,slideCount):
     file_put_contents(folder+"/_state", str(i))
     print "Downloading slide %d: " % (i+1) + slideFileNames[i]
-    data=requests.get(slideBaseUrl+slideNames[i]).text
-    try:
-        file_put_contents(folder+"/"+slideFileNames[i], data)
-    except (UnicodeEncodeError):
-        print "Corrupt file, skipping...."
-        pass;
+    data=requests.get(slideBaseUrl+slideNames[i]).content
+    file_put_contents(folder+"/"+slideFileNames[i], data)
 
 print "\nFinished Downloading Slides\n"
 
 if (not glob.glob(folder+"/*.avi")): #no video downloaded yet
     print ("trying to download the presentation video, this might take a while depending on your connection speed:")
-    from subprocess import call
+    print (videoDownloadCommand);
     os.system(videoDownloadCommand)
 else:
     print ("seems you have downloaded the video, so all is done. Goodbye.")
